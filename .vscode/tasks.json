@@ -1,0 +1,93 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "env": { "MSYS_NO_PATHCONV": "1" },
+        "shell": {
+            "executable": "C:\\Users\\a5139629\\AppData\\Local\\Programs\\Git\\bin\\bash.exe",
+            "args": ["-c"]
+        }
+    },
+    "tasks": [
+        {
+            "label": "Build hello (GCC, aarch64)",
+            "type": "shell",
+            "command": "source /c/toolchains/env.sh && aarch64-none-linux-gnu-gcc -static -O2 -o hello hello.c",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Build hello (Clang, aarch64)",
+            "type": "shell",
+            "command": "source /c/toolchains/env.sh && aarch64-clang -static -O2 -o hello-clang hello.c",
+            "group": "build",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Build hello-debug (GCC, aarch64)",
+            "type": "shell",
+            "command": "source /c/toolchains/env.sh && aarch64-none-linux-gnu-gcc -static -g -O0 -o hello-debug hello.c",
+            "group": "build",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "Deploy & run hello on board",
+            "type": "shell",
+            "command": "scp hello root@10.0.0.121:/home/root/apps/ && ssh root@10.0.0.121 'chmod +x /home/root/apps/hello && /home/root/apps/hello'",
+            "group": "none",
+            "dependsOn": ["Build hello (GCC, aarch64)"]
+        },
+        {
+            "label": "Deploy hello-debug to board",
+            "type": "shell",
+            "command": "scp hello-debug root@10.0.0.121:/home/root/apps/ && ssh root@10.0.0.121 'chmod +x /home/root/apps/hello-debug'",
+            "group": "none",
+            "dependsOn": ["Build hello-debug (GCC, aarch64)"]
+        },
+        {
+            "label": "Start gdbserver on board",
+            "type": "shell",
+            "command": "ssh root@10.0.0.121 'kill $(pidof gdbserver) 2>/dev/null; exec /home/root/apps/gdbserver :2345 /home/root/apps/hello-debug'",
+            "isBackground": true,
+            "group": "none",
+            "dependsOn": ["Deploy hello-debug to board"],
+            "problemMatcher": {
+                "owner": "gdbserver",
+                "pattern": { "regexp": "^__never_matches__$" },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^Process .* created",
+                    "endsPattern": "^Listening on port 2345"
+                }
+            }
+        },
+        {
+            "label": "USB: Init board link",
+            "type": "shell",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/usb-init.ps1",
+            "group": "none"
+        },
+        {
+            "label": "USB: Deploy & run hello on board",
+            "type": "shell",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/usb-deploy.ps1 -Src hello && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/console.ps1 -Cmd '/home/root/apps/hello'",
+            "group": "none",
+            "dependsOn": ["Build hello (GCC, aarch64)", "USB: Init board link"],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "USB: Deploy hello-debug to board",
+            "type": "shell",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/usb-deploy.ps1 -Src hello-debug",
+            "group": "none",
+            "dependsOn": ["Build hello-debug (GCC, aarch64)", "USB: Init board link"],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "USB: Start gdbserver on board",
+            "type": "shell",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/console.ps1 -WaitMs 4000 -IdleMs 1500 -Cmd 'setsid /home/root/apps/gdbserver /dev/ttyGS0 /home/root/apps/hello-debug < /dev/null > /dev/console 2>&1 &'",
+            "group": "none",
+            "dependsOn": ["USB: Deploy hello-debug to board"]
+        }
+    ]
+}

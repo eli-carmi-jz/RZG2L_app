@@ -1,0 +1,4 @@
+CompileFlags:
+  Add:
+    - --target=aarch64-none-linux-gnu
+    - --sysroot=C:/toolchains/aarch64-none-linux-gnu/libc
