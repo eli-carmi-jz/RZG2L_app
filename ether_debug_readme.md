@@ -44,7 +44,24 @@ Build a **static** aarch64 `gdbserver` from the GDB 15.2 source. The version mat
 
 **Why WSL:** building natively in Git Bash works in principle, but autotools spawns hundreds of small test programs and Windows process creation makes it take well over an hour. In WSL it takes a few minutes.
 
-Run these **inside WSL** (open an Ubuntu terminal, or prefix commands with `wsl -d Ubuntu-24.04 --`). No `sudo` is required.
+**Toolchain in WSL vs Windows:** the build needs a Linux-hosted aarch64 cross-compiler inside WSL. The Windows one in `C:\toolchains` is a Windows `.exe` build and cannot run there. Both are Arm GNU Toolchain 14.3.Rel1 targeting `aarch64-none-linux-gnu`, so they produce the same kind of binaries, but they are separate downloads:
+
+| | Windows (hello app) | WSL (`gdbserver`) |
+|---|---|---|
+| Package | `arm-gnu-toolchain-14.3.rel1-mingw-w64-i686-aarch64-none-linux-gnu` | `arm-gnu-toolchain-14.3.rel1-x86_64-aarch64-none-linux-gnu` |
+| Runs on | Windows (`.exe`) | Linux (ELF) |
+| Location | `C:\toolchains` | `~/gdbserver-build` in WSL |
+
+The WSL copy is only used for this one-time `gdbserver` build. The script below downloads it in step 1, so there is nothing else to install for it.
+
+**Prerequisites in WSL (once):** the script needs a native compiler, `make`, `curl`, `xz` and `file`. Install them if missing (needs `sudo`):
+
+```bash
+sudo apt update
+sudo apt install -y build-essential curl xz-utils file
+```
+
+Run the following **inside WSL** (open an Ubuntu terminal, or prefix commands with `wsl -d Ubuntu-24.04 --`). No `sudo` is needed for the build itself.
 
 ```bash
 set -e
