@@ -269,7 +269,7 @@ The programs print to the console, so their output is also visible in a terminal
 |---|---|
 | `Access to the port '<console-port>' is denied` (or `<usb-port>`) | Another program holds the port (SecureCRT, a previous gdb, a stuck PowerShell). Close it. Internal devices such as Intel "USB Serial Device" entries always report this; they are not the board |
 | `USB gadget not connected: plug the micro-USB cable into the PC` | The board's UDC state is not `configured`. Check the micro-USB cable and port, then run `USB: Init board link` again |
-| No `<usb-port>` in Device Manager | `g_serial` isn't loaded. Run `USB: Init board link`. The COM number may also differ if you use another USB port; update it (section 8) |
+| No `<usb-port>` in Device Manager (it is greyed out/"Unknown" with `Get-PnpDevice`), even after replugging the cable or rebooting the board | `g_serial` isn't loaded: the gadget is lost on every reboot, so the port only exists while the board has it loaded. Either run `USB: Init board link` (close SecureCRT first, it holds `<console-port>`), or type on the board console: `modprobe g_serial` and `cat /sys/class/udc/11c60000.usb/state` (should print `configured`). The COM number may also differ if you use another USB port; update it (section 8) |
 | Console prints nothing | Wrong COM port, or the board isn't booted. Press Enter on `<console-port>`; check that TX and RX are not swapped and GND is connected |
 | Console shows `Password:` | A command was typed at the `login:` prompt. Press `Ctrl+C`, then type `root` |
 | Console session logged out (`logout`) | Something HUPed the shell, for example starting `gdbserver` directly from the console. The tasks use `setsid ... < /dev/null > /dev/console &` for this reason |

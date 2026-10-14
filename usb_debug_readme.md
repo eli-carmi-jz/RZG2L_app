@@ -250,7 +250,7 @@ For an interactive session replace `-batch -x ...` with `-tui -ex "set serial ba
 |---|---|
 | `Access to the port ... is denied` | Another program holds `<console-port>` or `<usb-port>` (terminal program, an earlier gdb). Close it. |
 | `Ignoring packet error, continuing...` / `Remote communication error` / timeout on attach | `gdbserver` isn't running or isn't on `/dev/ttyGS0`. Run `USB: Init board link`, then `USB: Start gdbserver on board`. Check that `ps` on the board shows `gdbserver /dev/ttyGS0 ...` |
-| Debugger can't open `<usb-port>` / `No such file` | The COM number changed (different USB port). Check Device Manager and update [.vscode/launch.json](.vscode/launch.json) and [scripts/test-usb.gdb](scripts/test-usb.gdb) |
+| Debugger can't open `<usb-port>` / `No such file` | The COM number changed (different USB port), or the port is gone because the board was rebooted and `g_serial` isn't loaded. In the second case run `modprobe g_serial` on the board console (or the `USB: Init board link` task) and check `cat /sys/class/udc/11c60000.usb/state` prints `configured`. Otherwise check Device Manager and update [.vscode/launch.json](.vscode/launch.json) and [scripts/test-usb.gdb](scripts/test-usb.gdb) |
 | Console shows `login:` / `Password:` after starting `gdbserver` | `gdbserver` was started directly from the console shell and logged it out. Use the `setsid ... &` form above, then log in again (`Ctrl+C`, type `root`) |
 | Several `gdbserver` processes on the board | Old ones from earlier sessions. `USB: Init board link` stops them |
 | `No handler registered for request of type 'renesas/get_cores'` | Disable the **Renesas Tracing and Profiling Tools** extension for the workspace and **reload the window** (section 3.3) |
