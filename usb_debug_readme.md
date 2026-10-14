@@ -185,13 +185,16 @@ Stopping due to fatal error: InvalidOperationException: No handler registered fo
 
 That extension sends a Renesas-only request (`renesas/get_cores`) to all debug sessions, and the Microsoft C/C++ debug adapter doesn't understand it.
 
+When this happens the breakpoints are bound correctly (the Debug Console shows `AD7BreakpointBoundEvent`), but the session is killed before gdb continues, so the program never stops at `main`.
+
 Fix:
 
-1. Extensions view (`Ctrl+Shift+X`), search **Renesas Tracing and Profiling Tools**.
-2. Gear icon -> **Disable (Workspace)**.
-3. Run **Developer: Reload Window** (or restart VS Code). The extension host must actually restart; disabling alone isn't enough.
+1. Open the Extensions view (`Ctrl+Shift+X`) and search for `@id:renesaselectronicscorporation.renesas-rpm`. A plain text search or scrolling the list is easy to get wrong: the installed list is alphabetical, and this extension sits below **Renesas Smart Manual**.
+2. Click the gear icon, then **Disable (Workspace)**.
+3. Click the blue **Restart Extensions** button on the extension page, or run **Developer: Reload Window**. The extension host must actually restart; disabling alone isn't enough, and the extension shows **Restart Required** until you do.
+4. Check that the extension page now says it is disabled in this workspace and offers **Enable (Workspace)**.
 
-Other Renesas extensions don't depend on it, and other workspaces keep it enabled.
+Other Renesas extensions don't depend on it, and other workspaces keep it enabled. If the workspace-level disable is ignored, use plain **Disable** (all workspaces), reload, and re-enable it later when you need it.
 
 ## 4. Start a debug session
 
@@ -248,12 +251,14 @@ For an interactive session replace `-batch -x ...` with `-tui -ex "set serial ba
 
 | Symptom | Cause / fix |
 |---|---|
-| `Access to the port ... is denied` | Another program holds `<console-port>` or `<usb-port>` (terminal program, an earlier gdb). Close it. |
+| `Access to the port ... is denied` | Another program holds `<console-port>` or `<usb-port>` (terminal program, an earlier gdb or a stuck debug session). Stop the debug session or close the program; if needed, reload the window to end a leftover `OpenDebugAD7.exe`. |
 | `Ignoring packet error, continuing...` / `Remote communication error` / timeout on attach | `gdbserver` isn't running or isn't on `/dev/ttyGS0`. Run `USB: Init board link`, then `USB: Start gdbserver on board`. Check that `ps` on the board shows `gdbserver /dev/ttyGS0 ...` |
 | Debugger can't open `<usb-port>` / `No such file` | The COM number changed (different USB port), or the port is gone because the board was rebooted and `g_serial` isn't loaded. In the second case run `modprobe g_serial` on the board console (or the `USB: Init board link` task) and check `cat /sys/class/udc/11c60000.usb/state` prints `configured`. Otherwise check Device Manager and update [.vscode/launch.json](.vscode/launch.json) and [scripts/test-usb.gdb](scripts/test-usb.gdb) |
 | Console shows `login:` / `Password:` after starting `gdbserver` | `gdbserver` was started directly from the console shell and logged it out. Use the `setsid ... &` form above, then log in again (`Ctrl+C`, type `root`) |
 | Several `gdbserver` processes on the board | Old ones from earlier sessions. `USB: Init board link` stops them |
-| `No handler registered for request of type 'renesas/get_cores'` | Disable the **Renesas Tracing and Profiling Tools** extension for the workspace and **reload the window** (section 3.3) |
+| `No handler registered for request of type 'renesas/get_cores'` | Disable the **Renesas Tracing and Profiling Tools** extension for the workspace and **restart the extensions / reload the window** (section 3.3) |
+| Debug session stays "running", never stops at `main`, no Call Stack | Either the Renesas extension error above killed the session (check the Debug Console), or the program already finished on the board. Stop the session, rerun with `F5` |
+| Need more detail about a failing session | Add `"logging": { "engineLogging": true }` to the launch entry and read the **Debug Console** (`Ctrl+Shift+Y`). Search for `break-insert`, `target-select`, `exec-continue`, `error` |
 | Breakpoints don't bind / source not found | The `hello-debug` on the board differs from the local one. Re-run the deploy task; don't debug the `-O2` `hello` |
 | `USB gadget not connected: plug the micro-USB cable into the PC` | The board UDC isn't `configured`. Check the micro-USB cable, then run `USB: Init board link` |
 | gdb warning `could not convert 'main' from the host encoding (CP1252) to UTF-32` | Harmless |

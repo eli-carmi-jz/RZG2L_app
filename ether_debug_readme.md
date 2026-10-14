@@ -165,13 +165,16 @@ Stopping due to fatal error: InvalidOperationException: No handler registered fo
 
 That extension sends a Renesas-only request (`renesas/get_cores`) to all debug sessions, and the Microsoft C/C++ debug adapter doesn't understand it.
 
+When this happens the breakpoints are bound correctly, but the session is killed before gdb continues, so the program never stops at `main`.
+
 Fix:
 
-1. Extensions view (`Ctrl+Shift+X`), search **Renesas Tracing and Profiling Tools**.
-2. Gear icon -> **Disable (Workspace)**.
-3. Run **Developer: Reload Window** (or restart VS Code). The extension host must actually restart; disabling alone isn't enough.
+1. Open the Extensions view (`Ctrl+Shift+X`) and search for `@id:renesaselectronicscorporation.renesas-rpm`. The installed list is alphabetical, and this extension sits below **Renesas Smart Manual**.
+2. Click the gear icon, then **Disable (Workspace)**.
+3. Click the blue **Restart Extensions** button on the extension page, or run **Developer: Reload Window**. The extension host must actually restart; disabling alone isn't enough, and the extension shows **Restart Required** until you do.
+4. Check that the extension page now says it is disabled in this workspace and offers **Enable (Workspace)**.
 
-Other Renesas extensions don't depend on it, and other workspaces keep it enabled.
+Other Renesas extensions don't depend on it, and other workspaces keep it enabled. If the workspace-level disable is ignored, use plain **Disable** (all workspaces), reload, and re-enable it later when you need it.
 
 ### 4.4 clangd editor errors (optional)
 

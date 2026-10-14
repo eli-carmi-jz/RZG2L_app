@@ -23,6 +23,7 @@
             "program": "${workspaceFolder}/hello-debug",
             "cwd": "${workspaceFolder}",
             "stopAtEntry": true,
+            "logging": { "engineLogging": true },
             "MIMode": "gdb",
             "miDebuggerPath": "C:/toolchains/bin/aarch64-none-linux-gnu-gdb.exe",
             "miDebuggerServerAddress": "\\\\.\\COM14",
